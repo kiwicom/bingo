@@ -15,10 +15,10 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"github.com/kiwicom/bingo/pkg/envars"
-	"github.com/kiwicom/bingo/pkg/runner"
 	"github.com/efficientgo/tools/core/pkg/errcapture"
 	"github.com/efficientgo/tools/core/pkg/merrors"
+	"github.com/kiwicom/bingo/pkg/envars"
+	"github.com/kiwicom/bingo/pkg/runner"
 	"github.com/pkg/errors"
 	"golang.org/x/mod/modfile"
 	"golang.org/x/mod/module"

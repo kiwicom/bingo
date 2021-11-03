@@ -18,10 +18,10 @@ import (
 	"time"
 	"unicode"
 
+	"github.com/efficientgo/tools/core/pkg/errcapture"
 	"github.com/kiwicom/bingo/pkg/bingo"
 	"github.com/kiwicom/bingo/pkg/runner"
 	"github.com/kiwicom/bingo/pkg/version"
-	"github.com/efficientgo/tools/core/pkg/errcapture"
 	"github.com/pkg/errors"
 	"golang.org/x/mod/module"
 )
