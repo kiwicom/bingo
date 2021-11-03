@@ -1,4 +1,4 @@
-module github.com/bwplotka/bingo
+module github.com/kiwicom/bingo
 
 go 1.14
 
