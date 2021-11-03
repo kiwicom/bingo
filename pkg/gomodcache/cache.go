@@ -7,7 +7,7 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/bwplotka/bingo/pkg/envars"
+	"github.com/kiwicom/bingo/pkg/envars"
 	"github.com/efficientgo/tools/core/pkg/merrors"
 	"github.com/pkg/errors"
 )

@@ -12,7 +12,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/bwplotka/bingo/pkg/runner"
+	"github.com/kiwicom/bingo/pkg/runner"
 	"github.com/efficientgo/tools/core/pkg/testutil"
 	"golang.org/x/mod/module"
 )

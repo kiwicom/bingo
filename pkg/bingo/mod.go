@@ -15,8 +15,8 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"github.com/bwplotka/bingo/pkg/envars"
-	"github.com/bwplotka/bingo/pkg/runner"
+	"github.com/kiwicom/bingo/pkg/envars"
+	"github.com/kiwicom/bingo/pkg/runner"
 	"github.com/efficientgo/tools/core/pkg/errcapture"
 	"github.com/efficientgo/tools/core/pkg/merrors"
 	"github.com/pkg/errors"

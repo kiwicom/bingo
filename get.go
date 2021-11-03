@@ -18,9 +18,9 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/bwplotka/bingo/pkg/bingo"
-	"github.com/bwplotka/bingo/pkg/runner"
-	"github.com/bwplotka/bingo/pkg/version"
+	"github.com/kiwicom/bingo/pkg/bingo"
+	"github.com/kiwicom/bingo/pkg/runner"
+	"github.com/kiwicom/bingo/pkg/version"
 	"github.com/efficientgo/tools/core/pkg/errcapture"
 	"github.com/pkg/errors"
 	"golang.org/x/mod/module"
