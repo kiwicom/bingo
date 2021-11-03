@@ -328,10 +328,7 @@ func validateNewName(versions []string, old, new string) error {
 }
 
 func cleanGoGetTmpFiles(modDir string) error {
-	// Remove all sum and tmp files
-	if err := removeAllGlob(filepath.Join(modDir, "*.sum")); err != nil {
-		return err
-	}
+	// Remove all tmp files
 	if err := removeAllGlob(filepath.Join(modDir, "*.*.tmp.*")); err != nil {
 		return err
 	}
@@ -731,6 +728,7 @@ const gitignore = `
 # But not these files:
 !.gitignore
 !*.mod
+!*.sum
 !README.md
 !Variables.mk
 !variables.env
