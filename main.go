@@ -16,9 +16,9 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/bwplotka/bingo/pkg/bingo"
-	"github.com/bwplotka/bingo/pkg/runner"
-	"github.com/bwplotka/bingo/pkg/version"
+	"github.com/kiwicom/bingo/pkg/bingo"
+	"github.com/kiwicom/bingo/pkg/runner"
+	"github.com/kiwicom/bingo/pkg/version"
 	"github.com/oklog/run"
 	"github.com/pkg/errors"
 )
