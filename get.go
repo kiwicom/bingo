@@ -18,10 +18,10 @@ import (
 	"time"
 	"unicode"
 
+	"github.com/efficientgo/tools/core/pkg/errcapture"
 	"github.com/kiwicom/bingo/pkg/bingo"
 	"github.com/kiwicom/bingo/pkg/runner"
 	"github.com/kiwicom/bingo/pkg/version"
-	"github.com/efficientgo/tools/core/pkg/errcapture"
 	"github.com/pkg/errors"
 	"golang.org/x/mod/module"
 )
@@ -542,6 +542,8 @@ func getPackage(ctx context.Context, logger *log.Logger, c installPackageConfig,
 		tmpModFilePath = filepath.Join(c.modDir, fmt.Sprintf("%s.%d.tmp.mod", name, i))
 	}
 
+	outSumFile := strings.TrimSuffix(outModFile, ".mod")+".sum"
+
 	// If we don't have all information or update is set, resolve version.
 	var fetchedDirectives bingo.NonRequireDirectives
 	if target.Module.Version == "" || !strings.HasPrefix(target.Module.Version, "v") || target.Module.Path == "" || c.update != runner.NoUpdatePolicy {
@@ -600,7 +602,10 @@ func getPackage(ctx context.Context, logger *log.Logger, c installPackageConfig,
 
 	// We were working on tmp file, do atomic rename.
 	if err := os.Rename(tmpModFile.FileName(), outModFile); err != nil {
-		return errors.Wrap(err, "rename")
+		return errors.Wrap(err, "rename mod file")
+	}
+	if err := os.Rename(tmpModFile.SumFileName(), outSumFile); err != nil {
+		return errors.Wrap(err, "rename sum file")
 	}
 	return nil
 }
