@@ -139,7 +139,7 @@ func CreateFromExistingOrNew(ctx context.Context, r *runner.Runner, logger *log.
 				}
 				existingSumFile := sumFilePath(existingFile)
 				sumFile := sumFilePath(modFile)
-				if err := copyFile(existingSumFile, sumFile); err != nil {
+				if err := copyFile(existingSumFile, sumFile); err != nil && !os.IsNotExist(err) {
 					return nil, err
 				}
 				return OpenModFile(modFile)
