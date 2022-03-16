@@ -19,11 +19,12 @@ import (
 	"unicode"
 
 	"github.com/efficientgo/tools/core/pkg/errcapture"
+	"github.com/pkg/errors"
+	"golang.org/x/mod/module"
+
 	"github.com/kiwicom/bingo/pkg/bingo"
 	"github.com/kiwicom/bingo/pkg/runner"
 	"github.com/kiwicom/bingo/pkg/version"
-	"github.com/pkg/errors"
-	"golang.org/x/mod/module"
 )
 
 var (
@@ -434,23 +435,56 @@ func latestModVersion(listFile string) (_ string, err error) {
 	return lastVersion, nil
 }
 
+// encodePath returns the safe encoding of the given module path.
+// It fails if the module path is invalid.
+// Copied & modified from https://github.com/golang/go/blob/c54bc3448390d4ae4495d6d2c03c9dd4111b08f1/src/cmd/go/internal/module/module.go#L421
+func encodePath(path string) string {
+	haveUpper := false
+	for _, r := range path {
+		if 'A' <= r && r <= 'Z' {
+			haveUpper = true
+		}
+	}
+
+	if !haveUpper {
+		return path
+	}
+
+	var buf []byte
+	for _, r := range path {
+		if 'A' <= r && r <= 'Z' {
+			buf = append(buf, '!', byte(r+'a'-'A'))
+		} else {
+			buf = append(buf, byte(r))
+		}
+	}
+	return string(buf)
+}
+
 // resolveInGoModCache will try to find a referenced module in the Go modules cache.
 func resolveInGoModCache(logger *log.Logger, verbose bool, update runner.GetUpdatePolicy, target *bingo.Package) error {
 	modMetaCache := filepath.Join(gomodcache(), "cache/download")
 	modulePath := target.Path()
+	// Case sensitivity problem is fixed by replacing upper case with '/!<lower case letter>` signature.
+	// See https://tip.golang.org/cmd/go/#hdr-Module_proxy_protocol
+	lookupModulePath := encodePath(modulePath)
 
 	// Since we don't know which part of full path is package, which part is module.
 	// Start from longest and go until we find one.
-	for ; len(strings.Split(modulePath, "/")) > 2; modulePath = filepath.Dir(modulePath) {
-		modMetaDir := filepath.Join(modMetaCache, modulePath, "@v")
+	for ; len(strings.Split(lookupModulePath, "/")) >= 2; func() {
+		lookupModulePath = filepath.Dir(lookupModulePath)
+		modulePath = filepath.Dir(modulePath)
+	}() {
+		modMetaDir := filepath.Join(modMetaCache, lookupModulePath, "@v")
 		if _, err := os.Stat(modMetaDir); err != nil {
-			if os.IsNotExist(err) {
-				if verbose {
-					logger.Println("resolveInGoModCache:", modMetaDir, "directory does not exists")
-				}
-				continue
+			if !os.IsNotExist(err) {
+				return err
 			}
-			return err
+			if verbose {
+				logger.Println("resolveInGoModCache:", modMetaDir, "directory does not exists")
+			}
+			continue
+
 		}
 		if verbose {
 			logger.Println("resolveInGoModCache: Found", modMetaDir, "directory")
@@ -474,14 +508,28 @@ func resolveInGoModCache(logger *log.Logger, verbose bool, update runner.GetUpda
 		// Look for .info files that have exact version or sha.
 		if strings.HasPrefix(target.Module.Version, "v") {
 			if _, err := os.Stat(filepath.Join(modMetaDir, target.Module.Version+".info")); err != nil {
-				if os.IsNotExist(err) {
+				if !os.IsNotExist(err) {
+					return err
+				}
+
+				if verbose {
+					logger.Println("resolveInGoModCache:", filepath.Join(modMetaDir, target.Module.Version+".info"),
+						"file not exists. Looking for +incompatible info file")
+				}
+
+				// Try +incompatible.
+				if _, err := os.Stat(filepath.Join(modMetaDir, target.Module.Version+"+incompatible.info")); err != nil {
+					if !os.IsNotExist(err) {
+						return err
+					}
+
 					if verbose {
-						logger.Println("resolveInGoModCache:", filepath.Join(modMetaDir, target.Module.Version+".info"),
+						logger.Println("resolveInGoModCache:", filepath.Join(modMetaDir, target.Module.Version+"+incompatible.info"),
 							"file not exists. Looking for different module")
 					}
 					continue
 				}
-				return err
+				target.Module.Version += "+incompatible"
 			}
 			target.Module.Path = modulePath
 			target.RelPath = strings.TrimPrefix(strings.TrimPrefix(target.RelPath, target.Module.Path), "/")
@@ -542,7 +590,7 @@ func getPackage(ctx context.Context, logger *log.Logger, c installPackageConfig,
 		tmpModFilePath = filepath.Join(c.modDir, fmt.Sprintf("%s.%d.tmp.mod", name, i))
 	}
 
-	outSumFile := strings.TrimSuffix(outModFile, ".mod")+".sum"
+	outSumFile := strings.TrimSuffix(outModFile, ".mod") + ".sum"
 
 	// If we don't have all information or update is set, resolve version.
 	var fetchedDirectives bingo.NonRequireDirectives

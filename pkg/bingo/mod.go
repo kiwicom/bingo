@@ -17,11 +17,12 @@ import (
 
 	"github.com/efficientgo/tools/core/pkg/errcapture"
 	"github.com/efficientgo/tools/core/pkg/merrors"
-	"github.com/kiwicom/bingo/pkg/envars"
-	"github.com/kiwicom/bingo/pkg/runner"
 	"github.com/pkg/errors"
 	"golang.org/x/mod/modfile"
 	"golang.org/x/mod/module"
+
+	"github.com/kiwicom/bingo/pkg/envars"
+	"github.com/kiwicom/bingo/pkg/runner"
 )
 
 const (
@@ -156,7 +157,7 @@ func CreateFromExistingOrNew(ctx context.Context, r *runner.Runner, logger *log.
 }
 
 func sumFilePath(modFilePath string) string {
-	return strings.TrimSuffix(modFilePath, ".mod")+".sum"
+	return strings.TrimSuffix(modFilePath, ".mod") + ".sum"
 }
 
 func copyFile(src, dst string) error {
@@ -286,6 +287,11 @@ func (mf *ModFile) DirectPackage() *Package {
 
 // Flush saves all changes made to parsed syntax and reloads the parsed file.
 func (mf *ModFile) Flush() error {
+	if mf.m == nil {
+		// Nothing to flush.
+		// Happens when previous flush had errors.
+		return nil
+	}
 	newB := modfile.Format(mf.m.Syntax)
 	if err := mf.f.Truncate(0); err != nil {
 		return errors.Wrap(err, "truncate")
