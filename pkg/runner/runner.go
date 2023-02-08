@@ -114,7 +114,6 @@ func (r *Runner) exec(ctx context.Context, output io.Writer, e envars.EnvSlice, 
 	cmd.Dir = filepath.Join(cmd.Dir, cd)
 	// TODO(bwplotka): Might be surprising, let's return err when this env variable is altered.
 	e = envars.MergeEnvSlices(os.Environ(), e...)
-	e.Set("GO111MODULE=on")
 	cmd.Env = e
 	cmd.Stdout = output
 	cmd.Stderr = output
@@ -128,7 +127,7 @@ func (r *Runner) exec(ctx context.Context, output io.Writer, e envars.EnvSlice, 
 		return errors.Errorf("error while running command '%s %s'; err: %v", command, strings.Join(args, " "), err)
 	}
 	if r.verbose {
-		r.logger.Printf("exec '%s %s'\n", command, strings.Join(args, " "))
+		r.logger.Printf("exec '%s %s' in %q with %v\n", command, strings.Join(args, " "), cd, cmd.Env)
 	}
 	return nil
 }
@@ -140,6 +139,7 @@ type Runnable interface {
 	Build(pkg, out string, args ...string) error
 	GoEnv(args ...string) (string, error)
 	ModDownload(args ...string) error
+	ModTidy(args ...string) (string, error)
 }
 
 type runnable struct {
@@ -242,4 +242,14 @@ func (r *runnable) ModDownload(args ...string) error {
 		r.r.logger.Println(trimmed)
 	}
 	return nil
+}
+
+// ModTidy runs `go mod tidy`
+func (r *runnable) ModTidy(args ...string) (string, error) {
+	a := []string{"mod", "tidy"}
+	out := &bytes.Buffer{}
+	if err := r.r.execGo(r.ctx, out, r.extraEnvVars, r.dir, r.modFile, append(a, args...)...); err != nil {
+		return "", errors.Wrap(err, out.String())
+	}
+	return strings.Trim(out.String(), "\n"), nil
 }
